@@ -33,5 +33,10 @@ If everything went well, you'll see a URL like http://localhost:5173 appear in y
 The page will be blank — you're ready to create a scene.
 */ 
 
+AXES
 An axis object to visualize the 3 axes in a simple way.
 The X axis is red. The Y axis is green. The Z axis is blue.
+
+RAYCASTER
+Raycaster
+This class is designed to assist with raycasting. Raycasting is used for mouse picking (working out what objects in the 3d space the mouse is over) amongst other things.

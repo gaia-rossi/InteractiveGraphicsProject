@@ -6,19 +6,36 @@ import { update } from 'three/examples/jsm/libs/tween.module.js';
 //renderer
 const renderer = new THREE.WebGLRenderer();
 //set the background color
-renderer.setClearColor(0x000000);
+//renderer.setClearColor(0x000000);
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setAnimationLoop( animate );
 renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild( renderer.domElement );
 
 //scene object
 const scene = new THREE.Scene();
-
+scene.background = new THREE.Color(0xbfd1e5)
 //camera object (fieldOfView, aspectRatio, near and far plane of the camera)
 const camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
 camera.position.set(4, 5, 11);
 camera.lookAt(0, 0, 0); 
+
+//adding light
+//DirectionalLight( color , intensity )
+const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+directionalLight.position.set(10, 20, 10);
+scene.add( directionalLight );
+directionalLight.castShadow = true;
+//Set up shadow properties for the light
+directionalLight.shadow.mapSize.width = 2048; 
+directionalLight.shadow.mapSize.height = 2048; 
+directionalLight.shadow.camera.near = 0.5; 
+directionalLight.shadow.camera.far = 500; 
+//ambient light
+const light = new THREE.AmbientLight( 0x404040 ); // soft white light
+scene.add( light );
 
 //adding a plane
 const groundGeometry = new THREE.PlaneGeometry(20, 20);
@@ -30,25 +47,29 @@ const groundMaterial = new THREE.MeshStandardMaterial({
 const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
 //now the plane is horizontal (otherwise it's vertical)
 groundMesh.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+groundMesh.receiveShadow = true;
 scene.add(groundMesh);
+groundMesh.userData.ground = true;
+
+//useful to reset the animation 
+const initialPositions = {};
+const initialRotations = {};
 
 //adding a sphere
-/*radius — sphere radius. Default is 1.
-widthSegments — number of horizontal segments. Minimum value is 3, and the default is 32.
-heightSegments — number of vertical segments. Minimum value is 2, and the default is 16.*/
+/*radius — sphere radius. Default is 1.*/
 const sphereGeometry = new THREE.SphereGeometry(0.4); 
-const sphereMaterial = new THREE.MeshBasicMaterial( { color: 0xffff00 } ); 
+const sphereMaterial = new THREE.MeshPhongMaterial( { color: 0xffff00 } ); 
 const sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 sphere.position.set(1.5/2, 15, 5); 
+sphere.castShadow = true;
+sphere.receiveShadow = true;
 scene.add( sphere );
-
-//adding light
-//DirectionalLight( color , intensity )
-const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
-scene.add( directionalLight );
-//ambient light
-const light = new THREE.AmbientLight( 0x404040 ); // soft white light
-scene.add( light );
+//userData: An object that can be used to store custom data about the Object3D.
+sphere.userData.draggable = true;
+sphere.userData.name ="SPHERE";
+//store the initial position of the sphere
+initialPositions.sphere = sphere.position.clone();
+initialRotations.sphere = sphere.quaternion.clone();
 
 const axesHelper = new THREE.AxesHelper( 5 );
 scene.add( axesHelper );
@@ -85,9 +106,23 @@ for(let i=0; i<10; i++){
 		} else {
 			m.position.set(1.5/2 ,10, 3-7);
 		}
+		initialPositions[`pin${i}`] = m.position.clone();
 		console.log(i+ " posizione " + m.position.x +", "+ m.position.y+", " + m.position.z);
+		initialRotations[`pin${i}`] = m.quaternion.clone();
+
 		m.scale.set(0.4, 0.4, 0.4);
 		scene.add(m);
+
+		//adding shadows
+		m.traverse(function (node) {
+            if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true; // Se vuoi che i birilli ricevano ombre
+            }
+        });
+
+		m.userData.draggable = false;
+		m.userData.name ="BOWLING PIN";
 		mesh[i] = m;
 
 		//CANNON
@@ -127,6 +162,33 @@ const sphereBody = new CANNON.Body({
 world.addBody(sphereBody);
 sphereBody.linearDamping = 0.31;
 
+function resetAnimation(){
+//reset sphere
+    sphere.position.copy(initialPositions.sphere);
+    sphere.quaternion.copy(initialRotations.sphere);
+    sphereBody.position.copy(initialPositions.sphere);
+    sphereBody.quaternion.copy(initialRotations.sphere);
+    sphereBody.velocity.set(0, 0, 0);
+    sphereBody.angularVelocity.set(0, 0, 0);
+
+    //reset pins
+    for (let i = 0; i < mesh.length; i++) {
+        const m = mesh[i];
+        if (m) {
+            const initialPosition = initialPositions[`pin${i}`];
+            const initialRotation = initialRotations[`pin${i}`];
+            m.position.copy(initialPosition);
+            m.quaternion.copy(initialRotation);
+            meshBody[i].position.copy(initialPosition);
+            meshBody[i].quaternion.copy(initialRotation);
+            meshBody[i].velocity.set(0, 0, 0);
+            meshBody[i].angularVelocity.set(0, 0, 0);
+        }
+    }
+
+    arrowVisibility = true;
+}
+
 var play = true;
 function animate() {
 	if(play){
@@ -146,12 +208,22 @@ function animate() {
 			}
 		}
 
+		//function to move the sphere with the mouse
+		dragObject();
+		
+		 // Check if the sphere has fallen off the plane
+        if (sphere.position.y < -5) { 
+            console.log("The ball is fallen, resetting the scene");
+            resetAnimation();
+        }
+
 		renderer.render( scene, camera );
 	}
 }
 
 var forceMagnitude = 1000;
 var forceDirection = new THREE.Vector3(0, 0, -1);
+var arrowVisibility = true;
 
 function updateForce(command){
 	//code to update the arrow/force according to up-down
@@ -206,6 +278,7 @@ function applyForce(){
         sphereBody.position.z
     );
     sphereBody.applyForce(force, worldPoint);
+	arrowVisibility = false;
     console.log("Forza applicata: " + force.x + ", " + force.y + ", " + force.z);
 }
 
@@ -213,7 +286,7 @@ function updateArrowHelper() {
     arrowHelper.setDirection(forceDirection);
     arrowHelper.setLength(forceMagnitude/1000);
     arrowHelper.position.copy(sphereBody.position);
-    arrowHelper.visible = true;
+    arrowHelper.visible = arrowVisibility;
 }
 
 //event listener to pause/play the simulation
@@ -254,6 +327,63 @@ document.addEventListener("keydown", function (event) {
     };
 });
 
+//RAYCASTER FOR MOUSE PICKING
+const raycaster = new THREE.Raycaster();
+//variable to store the position of the mouse click
+const clickMouse = new THREE.Vector2();
+//variable about the last mouse movement position
+const moveMouse = new THREE.Vector2();
+//it will contain the last selected object that I want to drag;
+var draggable;
+
+//PICK AND DROP
+window.addEventListener('click', function(e){
+	if(draggable){
+		console.log("dropping draggable " + draggable.userData.name);
+		draggable = null;
+		return;
+	}
+	// calculate pointer position in normalized device coordinates
+	// (-1 to +1) for both components
+	clickMouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+	clickMouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+
+	// update the picking ray with the camera and pointer position
+	raycaster.setFromCamera( clickMouse, camera );
+	// calculate objects intersecting the picking ray
+	// the array is sorted: the closest intersecting object is at position 0 and the furthest is at the last index
+	const found = raycaster.intersectObjects( scene.children );
+
+	//If I found some object
+	if(found.length>0 && found[0].object.userData.draggable){
+		draggable = found[0].object;
+		console.log("found draggable: " + draggable.userData.name);
+	}
+
+});
+
+window.addEventListener('mousemove', function(e){
+	moveMouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+	moveMouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+});
+
+function dragObject(){
+	if(draggable != null){
+		raycaster.setFromCamera(moveMouse, camera);
+		const found = raycaster.intersectObjects( scene.children );
+		if(found.length > 0){
+			for(let i=0; i<found.length; i++){
+				var o = found[i];
+				//I will not change the y coordinate because I don't want to move the object upwards
+				draggable.position.x = o.point.x;
+				draggable.position.z = o.point.z;
+				sphereBody.position.x = o.point.x;
+                sphereBody.position.z = o.point.z;
+			}
+		}
+	}
+}
+
 //to adapt the window to the current screen size
 window.addEventListener('resize', function() {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -272,64 +402,3 @@ legend.addEventListener("click", function() {
 		legend.classList.add("expanded");
 	}
 });
-
-//adding event listener
-//document.addEventListener("click", function(){ alert("Hello World!"); });
-/*function getMousePosition(canvas, event) {
-	let x = event.clientX ; //to get the coordinate of the click
-	let y = event.clientY ;
-	console.log("Coordinate x: " + x,
-		"Coordinate y: " + y);
-}*/
-
-/*document.addEventListener("click", function (e) {
-	getMousePosition(document, e);
-});*/
-
-/*
-// Apply force to the sphere
-function applyForceToSphere(e) {
-	const rect = renderer.domElement.getBoundingClientRect();
-	const mouse_x = e.clientX - rect.left;
-	const mouse_y = e.clientY - rect.top;
-
-	//coordinate between -1 and 1
-	const nor_x = (mouse_x/ rect.width) * 2 -1;
-	const nor_y = -(mouse_y/ rect.height) *2 +1;
-
-	const clickPosition = new THREE.Vector3(nor_x, nor_y, 0.5);
-	clickPosition.unproject(camera);
-	const f = new THREE.Vector3().subVectors(clickPosition, sphere.position).normalize().multiplyScalar(100);
-  	const force = new CANNON.Vec3(f.x, f.y, f.z); // Example force vector
-    const worldPoint = new CANNON.Vec3(sphereBody.position.x, sphereBody.position.y, sphereBody.position.z);
-    sphereBody.applyForce(force, worldPoint);
-}
-
-function updateArrowHelper(e){
-	const rect = renderer.domElement.getBoundingClientRect();
-	const mouse_x = e.clientX - rect.left;
-	const mouse_y = e.clientY - rect.top;
-
-	//coordinate between -1 and 1
-	const nor_x = (mouse_x/ rect.width) * 2 -1;
-	const nor_y = -(mouse_y/ rect.height) *2 +1;
-
-	const clickPosition = new THREE.Vector3(nor_x, nor_y, 0.5);
-	/*Projects this vector from the camera's normalized device coordinate (NDC) space into world space.
-	clickPosition.unproject(camera);
-
-	const direction = new THREE.Vector3().subVectors(clickPosition, sphere.position).normalize();
-	const distance = clickPosition.distanceTo(sphere.position);
-	console.log(distance + " " + direction);
-	arrowHelper.setDirection(direction);
-	arrowHelper.setLength(distance);
-	arrowHelper.visible = true;
-}*/
-
-// Add event listener for applying force
-/*document.addEventListener("click", applyForceToSphere);
-document.addEventListener("mousemove", updateArrowHelper);*/
-//ATTENZIONE
-/*document.addEventListener('mousedown', onMouseDown, false);
-document.addEventListener('mousemove', onMouseMove, false);
-document.addEventListener('mouseup', onMouseUp, false);*/
