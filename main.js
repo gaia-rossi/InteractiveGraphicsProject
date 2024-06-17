@@ -5,8 +5,6 @@ import { update } from 'three/examples/jsm/libs/tween.module.js';
 
 //renderer
 const renderer = new THREE.WebGLRenderer();
-//set the background color
-//renderer.setClearColor(0x000000);
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setAnimationLoop( animate );
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -19,34 +17,47 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd1e5)
 //camera object (fieldOfView, aspectRatio, near and far plane of the camera)
 const camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
-camera.position.set(4, 5, 11);
+camera.position.set(1, 5, 15);
 camera.lookAt(0, 0, 0); 
 
 //adding light
 //DirectionalLight( color , intensity )
-const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+const directionalLight = new THREE.DirectionalLight( 0xffffff, 3 );
 directionalLight.position.set(10, 20, 10);
 scene.add( directionalLight );
 directionalLight.castShadow = true;
 //Set up shadow properties for the light
 directionalLight.shadow.mapSize.width = 2048; 
 directionalLight.shadow.mapSize.height = 2048; 
-directionalLight.shadow.camera.near = 0.5; 
-directionalLight.shadow.camera.far = 500; 
+//directionalLight.shadow.camera.near = 0.5; 
+//directionalLight.shadow.camera.far = 500; 
+const shadowCamera = directionalLight.shadow.camera;
+shadowCamera.left = -20;
+shadowCamera.right = 20;
+shadowCamera.top = 20;
+shadowCamera.bottom = -20;
+shadowCamera.near = 0.5;
+shadowCamera.far = 500;
+
 //ambient light
-const light = new THREE.AmbientLight( 0x404040 ); // soft white light
-scene.add( light );
+const ambientLight = new THREE.AmbientLight(0x404040, 1.5); // luce ambientale
+scene.add(ambientLight);
+
+//texture of the plane
+let TextureLoader = new THREE.TextureLoader();
+let texture = TextureLoader.load('ParquetFlooring.png');
 
 //adding a plane
 const groundGeometry = new THREE.PlaneGeometry(20, 20);
 //setting a grey colour for this material + we're making sure that both sides of the plane are rendered
 const groundMaterial = new THREE.MeshStandardMaterial({
-	color: 0x555555,
-	side: THREE.DoubleSide,
+	//color: 0x555555,
+	//side: THREE.DoubleSide,
+	map: texture,
 });
 const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
 //now the plane is horizontal (otherwise it's vertical)
-groundMesh.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+groundMesh.quaternion.setFromEuler(new THREE.Euler(-Math.PI/2, 0, 0));
 groundMesh.receiveShadow = true;
 scene.add(groundMesh);
 groundMesh.userData.ground = true;
@@ -56,9 +67,13 @@ const initialPositions = {};
 const initialRotations = {};
 
 //adding a sphere
+let sphereTextureLoader = new THREE.TextureLoader();
+let spheretexture = sphereTextureLoader.load('BallTexture.png');
 /*radius — sphere radius. Default is 1.*/
 const sphereGeometry = new THREE.SphereGeometry(0.4); 
-const sphereMaterial = new THREE.MeshPhongMaterial( { color: 0xffff00 } ); 
+const sphereMaterial = new THREE.MeshPhongMaterial( { 
+	//color: 0xffffff,
+	map: spheretexture } ); 
 const sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 sphere.position.set(1.5/2, 15, 5); 
 sphere.castShadow = true;
@@ -84,33 +99,57 @@ const hex = 0xffff00;
 const arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex );
 scene.add( arrowHelper );
 
+//CANNON
+const world = new CANNON.World({
+	gravity: new CANNON.Vec3(0, -9.81, 0)
+});
+
+const timeStep = 1/60;
+
+//materials
+const pinMaterial = new CANNON.Material("pinMaterial");
+const groundMaterial1 = new CANNON.Material("groundMaterial");
+const pinGroundContactMaterial = new CANNON.ContactMaterial(
+	pinMaterial,
+	groundMaterial1,
+	{friction: 1, restitution: 0}
+);
+world.addContactMaterial(pinGroundContactMaterial);
+
 //adding the blender object 
 var mesh = [];
 var meshBody = [];
 var index= 0.5;
 const loader = new GLTFLoader().setPath('/');
 for(let i=0; i<10; i++){
-	loader.load('bowlingPin.glb', (gltf) => {
+	loader.load('birillo.glb', (gltf) => {
 		console.log('loading model');
 		var m = gltf.scene;
+		
+		m.scale.set(0.3, 0.3, 0.3);
+		//BOUNDING BOX
+		const box = new THREE.Box3().setFromObject(m);
+		const size = new THREE.Vector3();
+		box.getSize(size); 
+		console.log('Bowling Pin dimension: ', size);
+
 		//setting positions
 		if(i>=0 && i<4){
-			m.position.set(i/2, 10, 0-7);
+			m.position.set(i/2, 0.001, 0-7);
 		} else if (i>=4 && i<7){
-			m.position.set(index/2, 10, 1-7);
+			m.position.set(index/2, 0.001, 1-7);
 			index += 1;
 		} else if (i>=7 && i<9){
 			//7%6=1
 			//8%6=2
-			m.position.set(i%6/2 ,10, 2-7);
+			m.position.set(i%6/2 , 0.001, 2-7);
 		} else {
-			m.position.set(1.5/2 ,10, 3-7);
+			m.position.set(1.5/2 , 0.001, 3-7);
 		}
 		initialPositions[`pin${i}`] = m.position.clone();
 		console.log(i+ " posizione " + m.position.x +", "+ m.position.y+", " + m.position.z);
 		initialRotations[`pin${i}`] = m.quaternion.clone();
 
-		m.scale.set(0.4, 0.4, 0.4);
 		scene.add(m);
 
 		//adding shadows
@@ -121,34 +160,36 @@ for(let i=0; i<10; i++){
             }
         });
 
+		console.log(m);
+
 		m.userData.draggable = false;
 		m.userData.name ="BOWLING PIN";
 		mesh[i] = m;
 
 		//CANNON
 		const mBody = new CANNON.Body({
-			mass: 3,
-			shape: new CANNON.Cylinder(0.2, 0.2, 0.5, 12), //?
-			position: new CANNON.Vec3(m.position.x, m.position.y, m.position.z)
+			mass: 10,
+			shape: new CANNON.Cylinder(size.x / 2, size.x / 2, size.y / 2, 12), //?
+			position: new CANNON.Vec3(m.position.x, m.position.y, m.position.z),
+			material: pinMaterial
 		});
 		world.addBody(mBody);
+		mBody.linearDamping = 0.31;
 		meshBody[i] = mBody;
+
+		meshBody[i].addEventListener("collide",function(e){
+			console.log("birrillo hit");
+		});
 	});
 }
-
-//CANNON
-const world = new CANNON.World({
-	gravity: new CANNON.Vec3(0, -9.81, 0)
-});
-
-const timeStep = 1/45;
 
 //CANNON: plane
 const groundBody = new CANNON.Body({
 	//shape: new CANNON.Plane(),
-	//mass: 0
-	shape: new CANNON.Box(new CANNON.Vec3(10, 10, 0.1)),
-	type: CANNON.Body.STATIC
+	mass: 0,
+	shape: new CANNON.Box(new CANNON.Vec3(10, 10, 0.001)),
+	type: CANNON.Body.STATIC,
+	material: groundMaterial1
 });
 world.addBody(groundBody);
 groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
@@ -162,8 +203,20 @@ const sphereBody = new CANNON.Body({
 world.addBody(sphereBody);
 sphereBody.linearDamping = 0.31;
 
+//rounds
+var roundNumber = 1;
+var prevScore = 0;
 function resetAnimation(){
-//reset sphere
+	//updating the score
+	var x = document.getElementById('currentScore').innerHTML = prevScore + fallenPins.size;
+	//round and score management
+	if(roundNumber%2 == 0){
+		fallenPins.clear();
+		//score is updated every two rounds because it is summed to the size of the fallen pins set
+		prevScore = x;
+	}
+	
+	//reset sphere
     sphere.position.copy(initialPositions.sphere);
     sphere.quaternion.copy(initialRotations.sphere);
     sphereBody.position.copy(initialPositions.sphere);
@@ -174,6 +227,13 @@ function resetAnimation(){
     //reset pins
     for (let i = 0; i < mesh.length; i++) {
         const m = mesh[i];
+		//If the pin has fallen in the previous round don't show it
+		if(fallenPins.has(i)){
+			m.visible = false;
+			continue;
+		}else{
+			m.visible = true;
+		}
         if (m) {
             const initialPosition = initialPositions[`pin${i}`];
             const initialRotation = initialRotations[`pin${i}`];
@@ -187,6 +247,17 @@ function resetAnimation(){
     }
 
     arrowVisibility = true;
+	roundNumber += 1;
+}
+
+//variable to store which bowling pins have fallen
+var fallenPins = new Set();
+function isPinFallen(pin) {
+    const upVector = new THREE.Vector3(0, 1, 0);
+    const pinUp = new THREE.Vector3(0, 1, 0).applyQuaternion(pin.quaternion);
+    const dot = upVector.dot(pinUp);
+    const angle = Math.acos(dot);
+    return angle > Math.PI / 18; // Angolo di 10 gradi
 }
 
 var play = true;
@@ -205,6 +276,11 @@ function animate() {
 			if(meshBody[i]){
 				mesh[i].position.copy(meshBody[i].position);
 				mesh[i].quaternion.copy(meshBody[i].quaternion);
+				// Check if the bowling pin has been hit and if it has fallen
+				if (isPinFallen(mesh[i])) {
+					fallenPins.add(i);
+					//console.log(`The bowling pin number ${i} has fallen`);
+				}
 			}
 		}
 
@@ -377,8 +453,8 @@ function dragObject(){
 				//I will not change the y coordinate because I don't want to move the object upwards
 				draggable.position.x = o.point.x;
 				draggable.position.z = o.point.z;
-				sphereBody.position.x = o.point.x;
-                sphereBody.position.z = o.point.z;
+				sphereBody.position.copy(draggable.position);
+				sphereBody.quaternion.copy(draggable.quaternion);
 			}
 		}
 	}
@@ -402,3 +478,4 @@ legend.addEventListener("click", function() {
 		legend.classList.add("expanded");
 	}
 });
+

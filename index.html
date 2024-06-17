@@ -2,49 +2,8 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>My first three.js app</title>
-		<style>
-			body { 
-				margin: 0;
-				overflow: hidden; 
-			}
-			#legend {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(255, 255, 255, 0.521);
-            padding: 10px;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            z-index: 10;
-			}
-			#legend h3 {
-				margin: 0 0 10px 0;
-			}
-			#legend ul {
-				list-style: none;
-				padding: 0;
-				margin: 0;
-			}
-			#legend li {
-				margin-bottom: 5px;
-			}
-			 /* Stile per la legenda espansa */
-			 .expanded {
-            width: auto;
-            height: auto;
-			}
-			/* Stile per la legenda compressa */
-			.collapsed {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-			}
-			.collapsed #commands {
-				display: none;
-			}
-		</style>
+		<title>Bowling game</title>
+		<link href="style.css" rel="stylesheet" type="text/css">
 	</head>
 	<body>
 		<div id="legend" class="collapsed">
@@ -59,6 +18,11 @@
 					<li><img src="/icons/arrow-return-left.svg"> Apply the force</li>
 				</ul>
 			</div>
+		</div>
+
+		<div class="score">
+			<span>score: </span>
+			<span  id="currentScore"> 0 </span>
 		</div>
         <script type="module" src="./main.js"></script>
 	</body>

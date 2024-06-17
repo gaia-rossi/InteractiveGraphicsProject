@@ -40,3 +40,16 @@ The X axis is red. The Y axis is green. The Z axis is blue.
 RAYCASTER
 Raycaster
 This class is designed to assist with raycasting. Raycasting is used for mouse picking (working out what objects in the 3d space the mouse is over) amongst other things.
+
+
+#Is pin fallen
+er determinare se un birillo è caduto, puoi verificare l'angolo di inclinazione del birillo rispetto al piano verticale. Se l'angolo di inclinazione supera una certa soglia (ad esempio, 10 gradi), puoi considerare il birillo come caduto.
+
+Metodo per Verificare se un Birillo è Caduto
+Calcola l'angolo di inclinazione del birillo:
+
+Usa la quaternione del birillo per ottenere l'orientamento.
+Confronta l'orientamento con il vettore verticale (0, 1, 0).
+Imposta una soglia di inclinazione:
+
+Se l'angolo di inclinazione supera la soglia, considera il birillo caduto.

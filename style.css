@@ -1,0 +1,48 @@
+body { 
+    margin: 0;
+    overflow: hidden; 
+}
+#legend {
+position: absolute;
+top: 10px;
+left: 10px;
+background-color: rgba(255, 255, 255, 0.521);
+padding: 10px;
+border-radius: 5px;
+font-family: Arial, sans-serif;
+font-size: 14px;
+z-index: 10;
+}
+#legend h3 {
+    margin: 0 0 10px 0;
+}
+#legend ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+#legend li {
+    margin-bottom: 5px;
+}
+ /* Stile per la legenda espansa */
+ .expanded {
+width: auto;
+height: auto;
+}
+/* Stile per la legenda compressa */
+.collapsed {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.collapsed #commands {
+    display: none;
+}
+.score {
+    position: absolute;
+    top: 10px; /* regola la distanza dal top */
+    right: 10px; /* regola la distanza dalla destra */
+    background-color: rgba(255, 255, 255, 0.5); /* opzionale: rende il background semitrasparente */
+    padding: 10px; /* opzionale: aggiunge spazio intorno al testo */
+     border-radius: 5px;
+}
