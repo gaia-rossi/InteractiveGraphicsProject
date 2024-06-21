@@ -53,3 +53,8 @@ Confronta l'orientamento con il vettore verticale (0, 1, 0).
 Imposta una soglia di inclinazione:
 
 Se l'angolo di inclinazione supera la soglia, considera il birillo caduto.
+
+
+# lineGeometry.computeBoundingSphere();
+.computeBoundingSphere () : undefined
+Computes the bounding sphere of the geometry, and updates the .boundingSphere attribute. The engine automatically computes the bounding sphere when it is needed, e.g., for ray casting or view frustum culling. You may need to recompute the bounding sphere if the geometry vertices are modified.

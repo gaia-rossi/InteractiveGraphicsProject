@@ -2,47 +2,97 @@ body {
     margin: 0;
     overflow: hidden; 
 }
-#legend {
-position: absolute;
-top: 10px;
-left: 10px;
-background-color: rgba(255, 255, 255, 0.521);
-padding: 10px;
-border-radius: 5px;
-font-family: Arial, sans-serif;
-font-size: 14px;
-z-index: 10;
-}
-#legend h3 {
-    margin: 0 0 10px 0;
-}
-#legend ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-#legend li {
-    margin-bottom: 5px;
-}
- /* Stile per la legenda espansa */
- .expanded {
-width: auto;
-height: auto;
-}
-/* Stile per la legenda compressa */
-.collapsed {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.collapsed #commands {
-    display: none;
-}
+
 .score {
     position: absolute;
     top: 10px; /* regola la distanza dal top */
     right: 10px; /* regola la distanza dalla destra */
+    justify-content: center; /* Centrare l'icona e il testo orizzontalmente */
+    width: fit-content; /* Impostare una larghezza fissa per tutti i pulsanti */
+    margin-bottom: 10px; /* Aggiungi un po' di spazio tra i pulsanti */
+    background: white; /* Sfondo dei pulsanti */
+    border: 1px solid #ccc; /* Bordo leggero per i pulsanti */
+    padding: 10px; /* Aggiungi padding ai pulsanti */
+    text-align: center; /* Centrare il testo */
+    border-radius: 20px;
+}
+
+#event {
+    position: absolute;
+    top: 10px; /* regola la distanza dal top */
+    right: 150px; /* regola la distanza dalla destra */
     background-color: rgba(255, 255, 255, 0.5); /* opzionale: rende il background semitrasparente */
     padding: 10px; /* opzionale: aggiunge spazio intorno al testo */
-     border-radius: 5px;
+    border-radius: 5px;
+}
+
+#settings, #commands, #endgame {
+    display: none;
+    flex-direction: column; /* Disporre i figli in una colonna */
+    align-items: flex-start; /* Allineare i figli all'inizio del contenitore */
+    border: 2px solid black; /* Bordo nero */
+    background-color: #f9f9f9; /* Sfondo chiaro */
+    padding: 10px; /* Aggiungi padding per un po' di spazio interno */
+    width: fit-content; /* Mantiene la larghezza in base al contenuto */
+    border-radius: 20px;
+    position: fixed; /* Posizionamento fisso per rimanere sopra la scena */
+    top: 50%; /* Centrare verticalmente */
+    left: 50%; /* Centrare orizzontalmente */
+    transform: translate(-50%, -50%); /* Centrare esattamente */
+    z-index: 1000; /* Assicurarsi che il div sia sopra altri contenuti */
+}
+
+#settings.visible, #commands.visible,  #endgame.visible {
+    display: flex; /* Mostra i menù solo quando hanno la classe 'visible' */
+}
+
+button {
+    display: flex;
+    align-items: center; /* Allineare l'icona e il testo verticalmente */
+    justify-content: center; /* Centrare l'icona e il testo orizzontalmente */
+    width: 200px; /* Impostare una larghezza fissa per tutti i pulsanti */
+    margin-bottom: 10px; /* Aggiungi un po' di spazio tra i pulsanti */
+    background: white; /* Sfondo dei pulsanti */
+    border: 1px solid #ccc; /* Bordo leggero per i pulsanti */
+    padding: 10px; /* Aggiungi padding ai pulsanti */
+    cursor: pointer; /* Cambia il cursore al passaggio del mouse */
+    text-align: center; /* Centrare il testo */
+    border-radius: 20px;
+}
+
+#settings button img, #commands li img{
+    margin-right: 10px; /* Aggiungi un po' di spazio tra l'icona e il testo */
+}
+
+.buttonsettings {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: fit-content;
+}
+
+.buttonlegend {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: fit-content;
+}
+
+#commands ul {
+    list-style: none; /* Rimuove i bullet points */
+    padding: 0; /* Rimuove il padding predefinito */
+    margin: 0; /* Rimuove il margin predefinito */
+}
+
+#commands li {
+    display: flex;
+    align-items: center; /* Allineare l'icona e il testo verticalmente */
+    justify-content: center; /* Centrare l'icona e il testo orizzontalmente */
+    width: 200px; /* Impostare una larghezza fissa per tutti i pulsanti */
+    margin-bottom: 10px; /* Aggiungi un po' di spazio tra i pulsanti */
+    background: white; /* Sfondo dei pulsanti */
+    border: 1px solid #ccc; /* Bordo leggero per i pulsanti */
+    padding: 10px; /* Aggiungi padding ai pulsanti */
+    text-align: center; /* Centrare il testo */
+    border-radius: 20px;
 }

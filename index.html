@@ -6,24 +6,37 @@
 		<link href="style.css" rel="stylesheet" type="text/css">
 	</head>
 	<body>
-		<div id="legend" class="collapsed">
-			<h3> <img src="/icons/info-circle.svg"> Commands</h3>
-			<div id="commands">
-				<ul>
-					<li><img src="/icons/p-circle.svg"> Pause/Resume</li>
-					<li><img src="/icons/arrow-up.svg"> Increase force magnitude</li>
-					<li><img src="/icons/arrow-down.svg"> Decrease force magnitude</li>
-					<li><img src="/icons/arrow-right.svg"> Rotate the force right</li>
-					<li><img src="/icons/arrow-left.svg"> Rotate the force left</li>
-					<li><img src="/icons/arrow-return-left.svg"> Apply the force</li>
-				</ul>
-			</div>
+		<button id="toggle-button-legend" class="buttonlegend"><img src="/icons/info-circle.svg"></button>
+		<div id="commands">
+			<ul>
+				<li><img src="/icons/p-circle.svg"> Pause/Resume</li>
+				<li><img src="/icons/arrow-up.svg"> Increase force magnitude</li>
+				<li><img src="/icons/arrow-down.svg"> Decrease force magnitude</li>
+				<li><img src="/icons/arrow-right.svg"> Rotate the force right</li>
+				<li><img src="/icons/arrow-left.svg"> Rotate the force left</li>
+				<li><img src="/icons/arrow-return-left.svg"> Apply the force</li>
+			</ul>
 		</div>
-
+		<button id="toggle-button-settings" class="buttonsettings"><img src="/icons/gear.svg"></button>
+		<div id="settings">
+			<button><img src="/icons/p-circle.svg"> Resume</button>
+			<button id="quit"><img src="/icons/box-arrow-left.svg"> Quit game </button>
+			<button class="restart"><img src="/icons/arrow-counterclockwise.svg"> Restart </button>
+		</div>
 		<div class="score">
 			<span>score: </span>
 			<span  id="currentScore"> 0 </span>
 		</div>
+		<div id="event">
+		</div>
+		
+		<div id="endgame">
+			<h3> GAME OVER! </h3>
+			<p><span>Your total score: </span>
+			   <span id="totalScore"> 0 </span></p>
+			<button class="restart"><img src="/icons/arrow-counterclockwise.svg"> Restart </button>
+		</div>
+
         <script type="module" src="./main.js"></script>
 	</body>
 </html>
