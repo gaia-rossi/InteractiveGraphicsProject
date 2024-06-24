@@ -17,15 +17,6 @@ body {
     border-radius: 20px;
 }
 
-#event {
-    position: absolute;
-    top: 10px; /* regola la distanza dal top */
-    right: 150px; /* regola la distanza dalla destra */
-    background-color: rgba(255, 255, 255, 0.5); /* opzionale: rende il background semitrasparente */
-    padding: 10px; /* opzionale: aggiunge spazio intorno al testo */
-    border-radius: 5px;
-}
-
 #settings, #commands, #endgame {
     display: none;
     flex-direction: column; /* Disporre i figli in una colonna */
@@ -95,4 +86,15 @@ button {
     padding: 10px; /* Aggiungi padding ai pulsanti */
     text-align: center; /* Centrare il testo */
     border-radius: 20px;
+}
+
+.rounded-bold-text {
+    position: absolute;
+    left: 45%;
+    top: 10%;
+    font-size: 3em;
+    font-weight: bold;
+    color: #000;
+    text-align: center;
+    display:none;
 }

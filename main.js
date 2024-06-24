@@ -15,8 +15,11 @@ var index= 0.5;
 const timeStep = 1/60;
 var play = true;
 var roundNumber = 1;
+const totalRounds = 5;
 var prevScore = 0;
+const fallenSphereHeight = -20;
 const initialForceMagnitude = 100;
+const maxForceMagnitude = 500;
 var forceMagnitude = 100;
 var forceDirection = new THREE.Vector3(0, 0, -1);
 var arrowVisibility = true;
@@ -50,9 +53,10 @@ directionalLight.position.set(0, 20, 20);
 //directionalLight.target = mesh[0];
 scene.add( directionalLight );
 directionalLight.castShadow = true;
+//directionalLight.shadow.bias = -0.0001;
 //Set up shadow properties for the light
-directionalLight.shadow.mapSize.width = 2048; 
-directionalLight.shadow.mapSize.height = 2048; 
+directionalLight.shadow.mapSize.width = 4096; 
+directionalLight.shadow.mapSize.height = 4096; 
 const shadowCamera = directionalLight.shadow.camera;
 shadowCamera.left = -30;
 shadowCamera.right = 30;
@@ -117,16 +121,16 @@ groundBody.position.set(groundMesh.position.x, groundMesh.position.y, groundMesh
 groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
 
 //SHPERE
-//adding a sphere
-let sphereTextureLoader = new THREE.TextureLoader();
-let spheretexture = sphereTextureLoader.load('BallTexture.png');
 /*radius — sphere radius. Default is 1.*/
 const sphereGeometry = new THREE.SphereGeometry(0.6); 
 const sphereMaterial = new THREE.MeshPhongMaterial( { 
-	//color: 0xffffff,
-	map: spheretexture } ); 
+	color: 0x000000,
+	shininess: 100,       // Lucentezza (più alto è il valore, più lucido sarà)
+    specular: 0x555555    // Colore speculare (riflessi)
+	//map: spheretexture
+	} );
 const sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-sphere.position.set(0, 15, 15); 
+sphere.position.set(0.5, 4, 15); 
 sphere.castShadow = true;
 sphere.receiveShadow = true;
 scene.add( sphere );
@@ -146,25 +150,11 @@ const sphereBody = new CANNON.Body({
 world.addBody(sphereBody);
 sphereBody.linearDamping = 0.31;
 
-/*const axesHelper = new THREE.AxesHelper( 5 );
-scene.add( axesHelper );*/
-/*
-//Arrow for the sphere
-const dir = new THREE.Vector3(1, 1 ,0);
-//normalize the direction vector (convert to vector of length 1)
-dir.normalize();
-const origin = new THREE.Vector3( 0, 0, 0 );
-const length = 1;
-const hex = 0xffff00;
-const arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex );
-scene.add( arrowHelper );*/
-
 //DASHED LINE FOR THE FORCE
-//create a blue LineBasicMaterial
 const lineMaterial = new THREE.LineDashedMaterial( { 
-	color: 0x0000ff, 
+	color: 0xff0000, 
 	linewidth: 10, 
-	dashSize: 1.0, 
+	dashSize: 1, 
 	gapSize: 0.5  } );
 const points = [sphereBody.position, new THREE.Vector3(5,1,3)];
 
@@ -282,13 +272,13 @@ function animate() {
 		//function to move the sphere with the mouse
 		dragObject();
 		
-		if(roundNumber == 5){
+		if(roundNumber == totalRounds){
 			//console.log("Game over!");
 			endAnimation();	
 		}
 
 		 // Check if the sphere has fallen off the plane
-        if (sphere.position.y < -20) { 
+        if (sphere.position.y < fallenSphereHeight) { 
             console.log("The ball is fallen, resetting the scene");
             resetAnimation();
         }		
@@ -301,17 +291,20 @@ renderer.setAnimationLoop(animate);
 
 //rounds
 function resetAnimation(){
+	play = true;
 	//updating the score
 	var x = prevScore + fallenPins.size;
 	document.getElementById('currentScore').innerHTML = x;
 	document.getElementById('totalScore').innerHTML = x;
 
 	if(fallenPins.size == 10 && roundNumber%2 == 1){ //strike
-		document.getElementById('event').innerHTML = "strike!";
+		document.getElementById('event').innerHTML = "Strike!";
+		showStrikeText();
 		//skip the round and show all bowling pins again
 		roundNumber +=1;
 	} else if(fallenPins.size == 10 && roundNumber%2 == 0) { //spare
-		document.getElementById('event').innerHTML = "spare!";
+		document.getElementById('event').innerHTML = "Spare!";
+		showStrikeText();
 	}
 
 	//round and score management
@@ -418,6 +411,7 @@ function updateDirectionForce(command){
 
 function applyForce(){
 	//apply the force when pressing enter
+	forceMagnitude = Math.min(maxForceMagnitude, forceMagnitude);
 	const force = new CANNON.Vec3(
         forceDirection.x * forceMagnitude,
         forceDirection.y * forceMagnitude,
@@ -434,10 +428,6 @@ function applyForce(){
 }
 
 function updateArrowHelper() {
-    /*arrowHelper.setDirection(forceDirection);
-    arrowHelper.setLength(forceMagnitude/100);
-    arrowHelper.position.copy(sphereBody.position);
-    arrowHelper.visible = arrowVisibility;*/
 	// Calculate startPoint and endPoint for the line
     const startPoint = new THREE.Vector3().copy(sphereBody.position);
     const endPoint = new THREE.Vector3().copy(sphereBody.position).add(
@@ -585,6 +575,11 @@ window.addEventListener('resize', function() {
 
 //HTML settings controller
 document.getElementById('toggle-button-settings').addEventListener('click', function() {
+	if(play){
+		play = false;
+	} else {
+		play = true;
+	}
     document.getElementById('settings').classList.toggle('visible');
 });
 
@@ -613,3 +608,21 @@ for(var i=0; i<restartButtons.length; i++){
 document.getElementById('quit').addEventListener('click', function() {
     document.getElementById('endgame').classList.add('visible');
 });
+
+//HTML resume button controller
+document.getElementById('resume').addEventListener('click', function() {
+	play = true;
+    document.getElementById('settings').classList.remove('visible');
+});
+
+
+//Strike and Spare message
+function showStrikeText() {
+	var strikeText = document.getElementById('event');
+	strikeText.style.display = 'block'; // Mostra il testo
+
+	// Nascondi il testo dopo 2 secondi
+	setTimeout(function() {
+		strikeText.style.display = 'none';
+	}, 2000); // 2000 millisecondi = 2 secondi
+}
