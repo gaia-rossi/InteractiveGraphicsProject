@@ -5,54 +5,54 @@ body {
 
 .score {
     position: absolute;
-    top: 10px; /* regola la distanza dal top */
-    right: 10px; /* regola la distanza dalla destra */
-    justify-content: center; /* Centrare l'icona e il testo orizzontalmente */
-    width: fit-content; /* Impostare una larghezza fissa per tutti i pulsanti */
-    margin-bottom: 10px; /* Aggiungi un po' di spazio tra i pulsanti */
-    background: white; /* Sfondo dei pulsanti */
-    border: 1px solid #ccc; /* Bordo leggero per i pulsanti */
-    padding: 10px; /* Aggiungi padding ai pulsanti */
-    text-align: center; /* Centrare il testo */
+    top: 10px; /*distance from the top */
+    right: 10px; /* distance from the right */
+    justify-content: center; /* center the content horizontally */
+    width: fit-content; /* fixed width */
+    margin-bottom: 10px; 
+    background: white;
+    border: 1px solid #ccc; 
+    padding: 10px; 
+    text-align: center; /* center the text */
     border-radius: 20px;
 }
 
 #settings, #commands, #endgame {
     display: none;
-    flex-direction: column; /* Disporre i figli in una colonna */
-    align-items: flex-start; /* Allineare i figli all'inizio del contenitore */
-    border: 2px solid black; /* Bordo nero */
-    background-color: #f9f9f9; /* Sfondo chiaro */
-    padding: 10px; /* Aggiungi padding per un po' di spazio interno */
-    width: fit-content; /* Mantiene la larghezza in base al contenuto */
+    flex-direction: column; /* arrange children in column-order*/
+    align-items: flex-start; /* order children from the start of the container */
+    border: 2px solid black; 
+    background-color: #f9f9f9;
+    padding: 10px; 
+    width: fit-content; 
     border-radius: 20px;
-    position: fixed; /* Posizionamento fisso per rimanere sopra la scena */
-    top: 50%; /* Centrare verticalmente */
-    left: 50%; /* Centrare orizzontalmente */
-    transform: translate(-50%, -50%); /* Centrare esattamente */
-    z-index: 1000; /* Assicurarsi che il div sia sopra altri contenuti */
+    position: fixed; /* to remain on top of the scene */
+    top: 50%; /* vertically centered*/
+    left: 50%; /* horizontally centered */
+    transform: translate(-50%, -50%); /* to center */
+    z-index: 1000; /* to make sure the element is on top of evertything else */
 }
 
 #settings.visible, #commands.visible,  #endgame.visible {
-    display: flex; /* Mostra i menù solo quando hanno la classe 'visible' */
+    display: flex; /*show menus only when they have the visible class */
 }
 
 button {
     display: flex;
-    align-items: center; /* Allineare l'icona e il testo verticalmente */
-    justify-content: center; /* Centrare l'icona e il testo orizzontalmente */
-    width: 200px; /* Impostare una larghezza fissa per tutti i pulsanti */
-    margin-bottom: 10px; /* Aggiungi un po' di spazio tra i pulsanti */
-    background: white; /* Sfondo dei pulsanti */
-    border: 1px solid #ccc; /* Bordo leggero per i pulsanti */
-    padding: 10px; /* Aggiungi padding ai pulsanti */
-    cursor: pointer; /* Cambia il cursore al passaggio del mouse */
-    text-align: center; /* Centrare il testo */
+    align-items: center; 
+    justify-content: center;
+    width: 200px; 
+    margin-bottom: 10px; /* add some space among the buttons */
+    background: white; 
+    border: 1px solid #ccc; 
+    padding: 10px;
+    cursor: pointer; 
+    text-align: center; 
     border-radius: 20px;
 }
 
 #settings button img, #commands li img{
-    margin-right: 10px; /* Aggiungi un po' di spazio tra l'icona e il testo */
+    margin-right: 10px; /* add some space between the icon and the text */
 }
 
 .buttonsettings {
@@ -70,21 +70,21 @@ button {
 }
 
 #commands ul {
-    list-style: none; /* Rimuove i bullet points */
-    padding: 0; /* Rimuove il padding predefinito */
-    margin: 0; /* Rimuove il margin predefinito */
+    list-style: none; /* remove the bullet points */
+    padding: 0; /* remove predefined padding */
+    margin: 0; /* remove predefined margin */
 }
 
 #commands li {
     display: flex;
-    align-items: center; /* Allineare l'icona e il testo verticalmente */
-    justify-content: center; /* Centrare l'icona e il testo orizzontalmente */
-    width: 200px; /* Impostare una larghezza fissa per tutti i pulsanti */
-    margin-bottom: 10px; /* Aggiungi un po' di spazio tra i pulsanti */
-    background: white; /* Sfondo dei pulsanti */
-    border: 1px solid #ccc; /* Bordo leggero per i pulsanti */
-    padding: 10px; /* Aggiungi padding ai pulsanti */
-    text-align: center; /* Centrare il testo */
+    align-items: center; 
+    justify-content: center; 
+    width: 200px; 
+    margin-bottom: 10px; 
+    background: white; 
+    border: 1px solid #ccc; 
+    padding: 10px;
+    text-align: center; 
     border-radius: 20px;
 }
 

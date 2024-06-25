@@ -4,11 +4,11 @@ import * as CANNON from 'cannon-es';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 //variables and constants definition
-//useful to reset the animation 
 const initialPositions = {};
 const initialRotations = {};
-let planewidth = 15;
-let planeheight = 40;
+var planewidth = 15;
+var planeheight = 40;
+var sphereRadius = 0.6;
 var mesh = [];
 var meshBody = [];
 var index= 0.5;
@@ -17,7 +17,7 @@ var play = true;
 var roundNumber = 1;
 const totalRounds = 5;
 var prevScore = 0;
-const fallenSphereHeight = -20;
+const fallenSphereHeight = -40;
 const initialForceMagnitude = 100;
 const maxForceMagnitude = 500;
 var forceMagnitude = 100;
@@ -35,7 +35,7 @@ document.body.appendChild( renderer.domElement );
 
 //scene object
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xbfd1e5)
+scene.background = new THREE.Color(0xbfd1e5);
 //camera object (fieldOfView, aspectRatio, near and far plane of the camera)
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
 
@@ -45,15 +45,13 @@ camera.position.set(0, 5, 20);
 camera.lookAt(0, 0, 0); 
 controls.update();
 
-
 //adding light
 //DirectionalLight( color , intensity )
 const directionalLight = new THREE.DirectionalLight( 0xffffff, 3 );
 directionalLight.position.set(0, 20, 20);
-//directionalLight.target = mesh[0];
-scene.add( directionalLight );
 directionalLight.castShadow = true;
-//directionalLight.shadow.bias = -0.0001;
+directionalLight.shadow.bias = -0.0001;
+scene.add( directionalLight );
 //Set up shadow properties for the light
 directionalLight.shadow.mapSize.width = 4096; 
 directionalLight.shadow.mapSize.height = 4096; 
@@ -69,20 +67,20 @@ shadowCamera.far = 500;
 scene.add( helper );*/
 
 //ambient light
-const ambientLight = new THREE.AmbientLight(0x404040, 1.5); // luce ambientale
+const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
 scene.add(ambientLight);
 
 //CANNON INITIALIZATION
 const world = new CANNON.World();
 world.gravity.set(0, -9.81, 0);
 
-//materials
+//Cannon: materials
 const pinMaterial = new CANNON.Material("pinMaterial");
 const groundMaterial1 = new CANNON.Material("groundMaterial");
 const pinGroundContactMaterial = new CANNON.ContactMaterial(
 	pinMaterial,
 	groundMaterial1,
-	{friction: 0.8, restitution: 0.1}
+	{friction: 0.8, restitution: 0.2}
 );
 world.addContactMaterial(pinGroundContactMaterial);
 
@@ -91,13 +89,9 @@ world.addContactMaterial(pinGroundContactMaterial);
 let TextureLoader = new THREE.TextureLoader();
 let texture = TextureLoader.load('ParquetFlooring.png');
 
-//adding a plane
-
 const groundGeometry = new THREE.PlaneGeometry(planewidth, planeheight);
-//setting a grey colour for this material + we're making sure that both sides of the plane are rendered
-const groundMaterial = new THREE.MeshStandardMaterial({
-	//color: 0xffff00
-	//side: THREE.DoubleSide,
+const groundMaterial = new THREE.MeshPhongMaterial({
+	side: THREE.DoubleSide,
 	map: texture
 });
 const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
@@ -109,12 +103,10 @@ groundMesh.userData.ground = true;
 
 //CANNON: plane
 const groundBody = new CANNON.Body({
-	//shape: new CANNON.Plane(),
 	mass: 0,
 	shape: new CANNON.Box(new CANNON.Vec3(planewidth/2, planeheight/2, 0.001)),
 	type: CANNON.Body.STATIC,
-	material: groundMaterial1,
-	//position: new CANNON.Vec3(0, -1, 0)
+	material: groundMaterial1
 });
 world.addBody(groundBody);
 groundBody.position.set(groundMesh.position.x, groundMesh.position.y, groundMesh.position.z);
@@ -122,15 +114,14 @@ groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
 
 //SHPERE
 /*radius — sphere radius. Default is 1.*/
-const sphereGeometry = new THREE.SphereGeometry(0.6); 
+const sphereGeometry = new THREE.SphereGeometry(sphereRadius); 
 const sphereMaterial = new THREE.MeshPhongMaterial( { 
 	color: 0x000000,
-	shininess: 100,       // Lucentezza (più alto è il valore, più lucido sarà)
-    specular: 0x555555    // Colore speculare (riflessi)
-	//map: spheretexture
-	} );
+	shininess: 100,       
+    specular: 0x555555   
+} );
 const sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-sphere.position.set(0.5, 4, 15); 
+sphere.position.set(4, 4, 13); 
 sphere.castShadow = true;
 sphere.receiveShadow = true;
 scene.add( sphere );
@@ -144,7 +135,7 @@ initialRotations.sphere = sphere.quaternion.clone();
 //CANNON: sphere
 const sphereBody = new CANNON.Body({
 	mass: 10,
-	shape: new CANNON.Sphere(0.5),
+	shape: new CANNON.Sphere(sphereRadius),
 	position: new CANNON.Vec3(sphere.position.x, sphere.position.y, sphere.position.z)
 });
 world.addBody(sphereBody);
@@ -187,7 +178,7 @@ function getPosition(i){
 
 const loader = new GLTFLoader().setPath('/');
 for(let i=0; i<10; i++){
-	loader.load('birillo.glb', (gltf) => {
+	loader.load('bowlingPin.glb', (gltf) => {
 		const m = gltf.scene.children.find((child) => child.name === "Cylinder");
 		//console.log('loading model');
 		
@@ -207,7 +198,7 @@ for(let i=0; i<10; i++){
 		var y=1;
 		m.position.set(x+offset_x,y,z+offset_z);
 		initialPositions[`pin${i}`] = m.position.clone();
-		console.log(i+ " posizione " + m.position.x +", "+ m.position.y+", " + m.position.z);
+		console.log(i+ "'s position: " + m.position.x +", "+ m.position.y+", " + m.position.z);
 		initialRotations[`pin${i}`] = m.quaternion.clone();
 
 		scene.add(m);
@@ -217,7 +208,7 @@ for(let i=0; i<10; i++){
 			//console.log(node);
             if (node.isMesh) {
                 node.castShadow = true;
-                //node.receiveShadow = true;
+                node.receiveShadow = true;
 			}
         });
 
@@ -230,7 +221,7 @@ for(let i=0; i<10; i++){
 		//CANNON
 		const mBody = new CANNON.Body({
 			mass: 10,
-			shape: new CANNON.Cylinder(size.x / 2, size.x / 2, size.y/2, 32), //?
+			shape: new CANNON.Cylinder(size.x / 2, size.x / 2, size.y/2, 32), 
 			position: new CANNON.Vec3(m.position.x, m.position.y, m.position.z),
 			material: pinMaterial
 		})
@@ -239,21 +230,22 @@ for(let i=0; i<10; i++){
 		//mBody.angularDamping = 0.9;
 		mBody.position.set(m.position.x, m.position.y, m.position.z);
 		mBody.collisionResponse = true;
-		console.log("cannon " + mBody.position.x + "," +  mBody.position.y + "," + mBody.position.z);
 		meshBody[i] = mBody;
 	});
 };
 
 function animate() {
 	if(play){
+
 		world.step(timeStep);
+
 		groundMesh.position.copy(groundBody.position);
 		groundMesh.quaternion.copy(groundBody.quaternion);
 
 		sphere.position.copy(sphereBody.position);
 		sphere.quaternion.copy(sphereBody.quaternion);
 
-		updateArrowHelper();
+		updateLine();
 
 		for(let i=0; i<10; i++){
 			if(meshBody[i]){
@@ -289,7 +281,7 @@ function animate() {
 
 renderer.setAnimationLoop(animate);
 
-//rounds
+//rounds management
 function resetAnimation(){
 	play = true;
 	//updating the score
@@ -347,9 +339,9 @@ function resetAnimation(){
         }
     }
 	
-	// Annulla l'effetto della forza di applicazione
-	forceMagnitude = 100; // Ripristina la magnitudine della forza di default
-	forceDirection.set(0, 0, -1); // Ripristina la direzione della forza di default
+	// Reset the force to its standard values
+	forceMagnitude = initialForceMagnitude;
+	forceDirection.set(0, 0, -1);
     arrowVisibility = true;
 	roundNumber += 1;
 }
@@ -366,7 +358,7 @@ function isPinFallen(pin) {
 	// Calculate the angle between the two vectors
     const angle = Math.acos(dot);
 	// Check if the angle is greater than 45 degrees (π / 4 radians)
-    return angle > Math.PI / 4; // Angolo di 45 gradi
+    return angle > Math.PI / 4;
 }
 
 function updateForce(command){
@@ -383,12 +375,12 @@ function updateForce(command){
 			console.log("invalid command");
 			break;	
 	}
-	console.log("Magnitudine della forza: " + forceMagnitude);
+	console.log("Force magnitude: " + forceMagnitude);
 }
 
 function updateDirectionForce(command){
 	//update the direction according to left-right
-	const angle = Math.PI / 180 //angle increase of 1 degrees
+	const angle = Math.PI / 180; //angle increase of 1 degrees
 	const quaternion = new THREE.Quaternion(); //It deals with rotations
 	switch (command){
 		case "Right":
@@ -405,8 +397,8 @@ function updateDirectionForce(command){
 			console.log("invalid command");
 			break;
 	}
-	forceDirection.normalize(); // Mantieni la direzione normalizzata
-    console.log("Direzione della forza: " + forceDirection.x + ", " + forceDirection.y + ", " + forceDirection.z);
+	forceDirection.normalize(); // to keep the direction vector normalized
+    console.log("Force direction: " + forceDirection.x + ", " + forceDirection.y + ", " + forceDirection.z);
 }
 
 function applyForce(){
@@ -424,10 +416,10 @@ function applyForce(){
     );
     sphereBody.applyImpulse(force, worldPoint);
 	arrowVisibility = false;
-    console.log("Forza applicata: " + force.x + ", " + force.y + ", " + force.z);
+    console.log("Applying force: " + force.x + ", " + force.y + ", " + force.z);
 }
 
-function updateArrowHelper() {
+function updateLine() {
 	// Calculate startPoint and endPoint for the line
     const startPoint = new THREE.Vector3().copy(sphereBody.position);
     const endPoint = new THREE.Vector3().copy(sphereBody.position).add(
@@ -445,23 +437,7 @@ function updateArrowHelper() {
 	line.visible = arrowVisibility;
 }
 
-function endAnimation(){
-	/*const div = document.getElementById('endgame');
-	// clientWidth e clientHeight
-	const clientWidth = div.clientWidth;
-	const clientHeight = div.clientHeight;
-	var x = clientWidth / 10;
-	var y = clientHeight / 10;
-	console.log(`Client Width: ${clientWidth}px, Client Height: ${clientHeight}px`);
-
-	world.gravity.set(0,0,0);
-	sphere.visible = false;
-	arrowVisibility = false;
-	for(let i=1; i<10; i++){
-		mesh[i].position.set(i, y, 0);
-		console.log(i+ " fine: ("+mesh[i].position.x + " "+mesh[i].position.y);
-	}*/
-	
+function endAnimation(){	
 	play=false;
 	updateCommands();
 }
@@ -480,31 +456,25 @@ document.addEventListener("keydown", function (event) {
 			break;
         case "ArrowUp":
 			// Press 'up' to increase the force module
-            console.log("Freccia su premuta");
 			updateForce("Up");
             break;
         case "ArrowDown":
 			// Press 'down' to decrease the force module
-            console.log("Freccia giù premuta");
 			updateForce("Down");
             break;
         case "ArrowLeft":
 			// Press 'left' to rotate the force direction
-            console.log("Freccia sinistra premuta");
 			updateDirectionForce("Left");
             break;
         case "ArrowRight":
 			// Press 'right' to rotate the force direction
-            console.log("Freccia destra premuta");
 			updateDirectionForce("Right");
             break;
 		case "Enter":
 			// Press 'enter' to apply the force
-			console.log("Tasto Invio premuto");
 			applyForce();
 			break;
         default:
-            // Altri tasti possono essere gestiti qui
             break;
     };
 });
@@ -592,12 +562,13 @@ document.getElementById('toggle-button-legend').addEventListener('click', functi
 const restartButtons = document.getElementsByClassName('restart');
 for(var i=0; i<restartButtons.length; i++){
 	var restart = restartButtons[i];
-	restart.addEventListener('click', function(event) {
+	restart.addEventListener('click', function(e) {
 		play = true;
 		roundNumber = 0;
 		prevScore = 0;
 		sphere.visible= true;
 		arrowVisibility = true;
+		fallenPins.clear();
 		resetAnimation();
 		document.getElementById('settings').classList.remove('visible');
 		document.getElementById('endgame').classList.remove('visible');
@@ -619,10 +590,10 @@ document.getElementById('resume').addEventListener('click', function() {
 //Strike and Spare message
 function showStrikeText() {
 	var strikeText = document.getElementById('event');
-	strikeText.style.display = 'block'; // Mostra il testo
+	strikeText.style.display = 'block'; // show the text
 
-	// Nascondi il testo dopo 2 secondi
+	// Hide the text after 2 seconds
 	setTimeout(function() {
 		strikeText.style.display = 'none';
-	}, 2000); // 2000 millisecondi = 2 secondi
+	}, 2000); // 2000 milliseconds
 }
