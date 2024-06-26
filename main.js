@@ -109,6 +109,7 @@ const groundBody = new CANNON.Body({
 	material: groundMaterial1
 });
 world.addBody(groundBody);
+groundBody.collisionResponse = true;
 groundBody.position.set(groundMesh.position.x, groundMesh.position.y, groundMesh.position.z);
 groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
 
@@ -140,6 +141,7 @@ const sphereBody = new CANNON.Body({
 });
 world.addBody(sphereBody);
 sphereBody.linearDamping = 0.31;
+sphereBody.collisionResponse = true;
 
 //DASHED LINE FOR THE FORCE
 const lineMaterial = new THREE.LineDashedMaterial( { 
@@ -218,16 +220,17 @@ for(let i=0; i<10; i++){
 		m.userData.name ="BOWLING PIN";
 		mesh[i] = m;
 
+		
 		//CANNON
+		var bias = 0.095;
 		const mBody = new CANNON.Body({
 			mass: 10,
-			shape: new CANNON.Cylinder(size.x / 2, size.x / 2, size.y/2, 32), 
+			shape: new CANNON.Cylinder(size.x / 2, size.x / 2, size.y/2 + bias), 
 			position: new CANNON.Vec3(m.position.x, m.position.y, m.position.z),
 			material: pinMaterial
 		})
 		world.addBody(mBody);
 		mBody.linearDamping = 0.31;
-		//mBody.angularDamping = 0.9;
 		mBody.position.set(m.position.x, m.position.y, m.position.z);
 		mBody.collisionResponse = true;
 		meshBody[i] = mBody;
@@ -257,7 +260,6 @@ function animate() {
 					//console.log(`The bowling pin number ${i} has fallen`);
 				}
 				//console.log("cannon " + mesh[i].position.x + "," + mesh[i].position.y + "," + mesh[i].position.z);
-
 			}
 		}
 
@@ -321,9 +323,12 @@ function resetAnimation(){
 		//If the pin has fallen in the previous round don't show it
 		if(fallenPins.has(i)){
 			m.visible = false;
+			moveOutOfScene(m, meshBody[i]);
 			continue;
 		}else{
 			m.visible = true;
+			scene.add(m);             // Add the mesh back to the scene
+			meshBody[i].wakeUp();
 		}
         if (m) {
             const initialPosition = initialPositions[`pin${i}`];
@@ -344,6 +349,16 @@ function resetAnimation(){
 	forceDirection.set(0, 0, -1);
     arrowVisibility = true;
 	roundNumber += 1;
+}
+
+// Move the object out of the scene
+function moveOutOfScene(mesh, body) {
+	// Remove the mesh from the scene
+	scene.remove(mesh);       
+	// Move the body far away   
+	body.position.set(10000, 10000, 10000); 
+	// Put the body to sleep
+	body.sleep();                
 }
 
 //variable to store which bowling pins have fallen
